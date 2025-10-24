@@ -94,6 +94,10 @@
             height: 22px;
             cursor: pointer;
         }
+        input[type="checkbox"]:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
         .disclaimer {
             background: #fff3cd;
             border: 2px solid #ffc107;
@@ -320,6 +324,26 @@
     </div>
 
     <script>
+        // Функция для блокировки чекбоксов при выборе ИП
+        function toggleIPRestrictions() {
+            const entity = document.querySelector('input[name="entity"]:checked').value;
+            const isIP = entity === 'ip';
+            
+            const itAccred = document.getElementById('itAccreditation');
+            const itInc = document.getElementById('itIncome70');
+            const skol = document.getElementById('skolkovo');
+            
+            itAccred.disabled = isIP;
+            itInc.disabled = isIP;
+            skol.disabled = isIP;
+            
+            if (isIP) {
+                itAccred.checked = false;
+                itInc.checked = false;
+                skol.checked = false;
+            }
+        }
+
         function formatNumber(num) {
             return new Intl.NumberFormat('ru-RU', {
                 minimumFractionDigits: 2,
