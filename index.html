@@ -312,19 +312,19 @@
             <div class="form-row">
                 <div class="form-group">
                     <label>Доходы за год, руб.</label>
-                    <input type="number" id="income" placeholder="Например: 100000000" min="0">
+                    <input type="number" id="income" placeholder="Например: 100000000" min="1" max="1000000000000" onkeydown="return preventInvalidInput(event)" oninput="sanitizeNumberInput(this)">
                 </div>
 
                 <div class="form-group">
                     <label>Фонд оплаты труда за год (до вычета НДФЛ), руб.</label>
-                    <input type="number" id="fot" placeholder="Например: 3000000" min="0">
+                    <input type="number" id="fot" placeholder="Например: 3000000" min="0" max="1000000000000" onkeydown="return preventInvalidInput(event)" oninput="sanitizeNumberInput(this)">
                 </div>
             </div>
 
             <div class="form-row">
                 <div class="form-group">
                     <label>Количество сотрудников</label>
-                    <input type="number" id="employees" placeholder="Например: 5" min="0">
+                    <input type="number" id="employees" placeholder="Например: 5" min="0" max="1000000" onkeydown="return preventInvalidInput(event)" oninput="sanitizeNumberInput(this)">
                 </div>
             </div>
 
@@ -354,7 +354,7 @@
             </div>
 
             <div class="disclaimer">
-                ⚠️ <strong>Дисклеймер:</strong> Калькулятор позволяет оценить, как изменится ваша нагрузка по страховым взносам с 2026 года. Это примерный расчет, он основан на средней заработной плате в вашей организации. Точный расчет страховых взносов зависит от множества индивидуальных параметров, в том числе от заработной платы каждого сотрудника. Если хотите посчитать иные налоги, оценить их изменение с 2026 года и получить консультацию, <a href="https://t.me/runetlex_bot" target="_blank">обратитесь в Рунетлекс</a>.
+                ⚠️ <strong>Дисклеймер:</strong> Калькулятор позволяет оценить, как изменится ваша нагрузка по страховых взносам с 2026 года. Это примерный расчет, он основан на средней заработной плате в вашей организации. Точный расчет страховых взносов зависит от множества индивидуальных параметров, в том числе заработной платы каждого сотрудника. Если хотите посчитать иные налоги, оценить их изменение с 2026 года и получить консультацию, <a href="https://t.me/runetlex_bot" target="_blank">обратитесь в Рунетлекс</a>.
             </div>
 
             <div class="button-group">
@@ -379,6 +379,38 @@
     </div>
 
     <script>
+        // Функция для блокировки некорректных клавиш при вводе
+        function preventInvalidInput(event) {
+            // Разрешаем: Backspace, Delete, Tab, Escape, Enter
+            if ([8, 9, 27, 13, 46].indexOf(event.keyCode) !== -1 ||
+                // Разрешаем: Ctrl+A, Ctrl+C, Ctrl+V, Ctrl+X
+                (event.keyCode === 65 && event.ctrlKey === true) ||
+                (event.keyCode === 67 && event.ctrlKey === true) ||
+                (event.keyCode === 86 && event.ctrlKey === true) ||
+                (event.keyCode === 88 && event.ctrlKey === true) ||
+                // Разрешаем: Home, End, стрелки влево и вправо
+                (event.keyCode >= 35 && event.keyCode <= 39)) {
+                return true;
+            }
+            // Блокируем: минус, плюс, e, E и другие недопустимые символы
+            if (event.key === '-' || event.key === '+' || event.key === 'e' || event.key === 'E' || event.key === '.' || event.key === ',') {
+                event.preventDefault();
+                return false;
+            }
+            // Разрешаем только цифры (0-9)
+            if ((event.keyCode < 48 || event.keyCode > 57) && (event.keyCode < 96 || event.keyCode > 105)) {
+                event.preventDefault();
+                return false;
+            }
+            return true;
+        }
+
+        // Функция для очистки значения поля от некорректных символов (для вставки через Ctrl+V)
+        function sanitizeNumberInput(input) {
+            // Удаляем все кроме цифр
+            input.value = input.value.replace(/[^0-9]/g, '');
+        }
+
         // Функция для блокировки чекбоксов при выборе ИП
         function toggleIPRestrictions() {
             const entity = document.querySelector('input[name="entity"]:checked').value;
@@ -631,6 +663,24 @@
             const hasIT70 = document.getElementById('itIncome70').checked;
             const isSkolkovo = document.getElementById('skolkovo').checked;
             
+            // Валидация доходов
+            if (income < 1 || income > 1000000000000) {
+                alert('Доходы за год должны быть от 1 до 1 000 000 000 000 рублей');
+                return;
+            }
+            
+            // Валидация количества сотрудников
+            if (employees < 0 || employees > 1000000) {
+                alert('Количество сотрудников должно быть от 0 до 1 000 000');
+                return;
+            }
+            
+            // Валидация ФОТ
+            if (fot < 0 || fot > 1000000000000) {
+                alert('ФОТ должен быть от 0 до 1 000 000 000 000 рублей');
+                return;
+            }
+            
             if (entity === 'ip' && income === 0) {
                 alert('Для ИП укажите доходы за год');
                 return;
@@ -638,6 +688,11 @@
             
             if (entity === 'ooo' && (fot === 0 || employees === 0)) {
                 alert('Для ООО укажите ФОТ и количество сотрудников');
+                return;
+            }
+            
+            if (entity === 'ooo' && fot < 1) {
+                alert('Для ООО ФОТ должен быть минимум 1 рубль');
                 return;
             }
             
